@@ -4,31 +4,44 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 
-public class Player : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
-    [Tooltip("In ms^-1")][SerializeField] float speed = 20f;
-
+    // todo work-out why sometimes slow on first play of scene
+    [Header("General")]
+    [Tooltip("In ms^-1")][SerializeField] float controlSpeed = 20f;
     [Tooltip("In m")][SerializeField] float xRange = 5f;
     [Tooltip("In m")] [SerializeField] float yRange = 5f;
 
+    [Header("Screen-position Based")]
     [SerializeField] float positionPitchFactor = -5f;
     [SerializeField] float controlPitchFactor = -30f;
 
+    [Header("Control-throw Based")]
     [SerializeField] float positionYawFactor = -5f;
     [SerializeField] float controlRollFactor = 5f;
 
     float xThrow, yThrow;
-    // Start is called before the first frame update
-    void Start()
+    bool isControllEnabled = true;
+    private void OnCollisionEnter(Collision collision)
     {
-        
+        print("Player collided with something");
     }
+
+    
 
     // Update is called once per frame
     void Update()
     {
-        ProcessTranslation();
-        ProcessRotation();
+        if (isControllEnabled)
+        {
+            ProcessTranslation();
+            ProcessRotation();
+        }
+    }
+
+    void OnPlayerDeath() // called by string reference
+    {
+        isControllEnabled = false;
     }
 
     private void ProcessRotation()
@@ -44,12 +57,12 @@ public class Player : MonoBehaviour
     private void ProcessTranslation()
     {
         xThrow = CrossPlatformInputManager.GetAxis("Horizontal");
-        float xOffSet = xThrow * speed * Time.deltaTime;
+        float xOffSet = xThrow * controlSpeed * Time.deltaTime;
         float rawXPos = transform.localPosition.x + xOffSet;
         float clampedXPos = Mathf.Clamp(rawXPos, -xRange, xRange);
 
         yThrow = CrossPlatformInputManager.GetAxis("Vertical");
-        float yOffSet = yThrow * speed * Time.deltaTime;
+        float yOffSet = yThrow * controlSpeed * Time.deltaTime;
         float rawYPos = transform.localPosition.y + yOffSet;
         float clampedYPos = Mathf.Clamp(rawYPos, -yRange, +yRange);
         transform.localPosition = new Vector3(clampedXPos, clampedYPos, transform.localPosition.z);
